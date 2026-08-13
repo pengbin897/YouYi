@@ -3,7 +3,7 @@ title: Workbuddy (CodeBuddy) Hooks 接入说明
 agent: Workbuddy
 source: https://www.workbuddy.ai/docs/cli/hooks
 fetched_at: 2026-08-12
-notes: Workbuddy 文档站即 CodeBuddy Hooks Reference
+notes: Workbuddy 文档站即 CodeBuddy Hooks Reference。2026-08-13 补充插件参考中的完整事件表（见文末「补充：完整事件表」），确认 PermissionRequest 为专用授权事件。
 ---
 
 Hooks Reference | Tencent Cloud Code Assistant CodeBuddy – AI Code Editor
@@ -1025,3 +1025,62 @@ For a complete example of using frontmatter hooks in a Skill, see Skills documen
 ---
 
 With this guide you should have a complete understanding of how hooks work inside CodeBuddy Code and how to configure them safely. For a hands-on walkthrough, continue with the Hooks Getting Started Guide.
+
+---
+
+## 补充：完整事件表（摘自插件参考，2026-08-13）
+
+主文档正文只详细记载了 9 个事件，完整事件家族在插件参考（Plugins Reference › Hooks 一节）中给出。
+关键结论：**插件钩子响应与用户定义钩子相同的生命周期事件**——即 `~/.codebuddy/settings.json`
+中的用户级 hooks 同样可以订阅下表的全部事件，其中就包括专用授权事件 `PermissionRequest`。
+
+| 事件 | 触发时机 |
+| --- | --- |
+| `SessionStart` | 会话开始或恢复时 |
+| `UserPromptSubmit` | 用户提交提示时，在 AI 处理之前 |
+| `PreToolUse` | 工具调用执行前，可以阻断 |
+| `PermissionRequest` | 权限对话框出现时 |
+| `PermissionDenied` | 工具调用被自动模式分类器拒绝时。返回 `{retry: true}` 告知模型可重试 |
+| `PostToolUse` | 工具调用成功后 |
+| `PostToolUseFailure` | 工具调用失败后 |
+| `Notification` | CodeBuddy 发送通知时 |
+| `SubagentStart` | 子代理启动时 |
+| `SubagentStop` | 子代理完成时 |
+| `TaskCreated` | 通过 TaskCreate 创建任务时 |
+| `TaskCompleted` | 任务被标记为已完成时 |
+| `Stop` | AI 完成响应时 |
+| `StopFailure` | 轮次因 API 错误结束时。输出和退出码被忽略 |
+| `TeammateIdle` | 团队成员即将进入空闲时 |
+| `InstructionsLoaded` | CODEBUDDY.md 或 .codebuddy/rules/*.md 文件加载到上下文时 |
+| `ConfigChange` | 会话期间配置文件变更时 |
+| `CwdChanged` | 工作目录变更时（例如 AI 执行 cd 命令） |
+| `FileChanged` | 监视的文件在磁盘上变更时。matcher 字段指定要监视的文件名 |
+| `WorktreeCreate` | 通过 --worktree 或 isolation: "worktree" 创建工作树时 |
+| `WorktreeRemove` | 工作树被移除时（会话退出或子代理完成时） |
+| `PreCompact` | 上下文压缩之前 |
+| `PostCompact` | 上下文压缩完成后 |
+| `Elicitation` | MCP 服务器在工具调用期间请求用户输入时 |
+| `ElicitationResult` | 用户响应 MCP elicitation 后，响应发回服务器之前 |
+| `SessionEnd` | 会话终止时 |
+
+钩子类型：`command`（shell 命令）、`http`（事件 JSON 作为 POST 请求发送到 URL）、
+`prompt`（LLM 评估）、`agent`（带工具的代理验证器）。
+
+### PermissionRequest 决策形状（推断，待真机验证）
+
+插件参考未给出 `PermissionRequest` 的决策输出 schema。但 CodeBuddy 的 hooks 体系与
+Claude Code 同构（`PreToolUse` 的 `permissionDecision: allow|deny|ask` schema 与 Claude
+逐字一致），按 Claude Code 文档，`PermissionRequest` 的决策形状为：
+
+```jsonc
+{
+  "hookSpecificOutput": {
+    "hookEventName": "PermissionRequest",
+    "decision": { "behavior": "allow" | "deny", "message": "拒绝时给 Agent 的解释" }
+  }
+}
+```
+
+- 放行/拒绝按上述 JSON 回写；不返回任何决策（exit 0 且无 stdout JSON）则交回本机权限对话框。
+- 游奕的 Workbuddy 方言表据此把授权闸门从 PreToolUse 迁移到了 PermissionRequest
+  （`gateAt: 'dedicated'`），若真机验证发现 schema 不符，需回退或修正此处与方言表。

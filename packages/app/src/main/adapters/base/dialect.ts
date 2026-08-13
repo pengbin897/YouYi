@@ -87,7 +87,7 @@ export interface HookDialect {
 
 const home = homedir()
 
-/** Claude / Codex 共用的授权决策形状：hookSpecificOutput.decision.behavior */
+/** Claude / Codex / Workbuddy 共用的授权决策形状：hookSpecificOutput.decision.behavior */
 function behaviorDecision(eventName: string, behavior: 'allow' | 'deny', message?: string) {
   return {
     json: {
@@ -100,7 +100,7 @@ function behaviorDecision(eventName: string, behavior: 'allow' | 'deny', message
   }
 }
 
-/** Workbuddy / Trae 共用的授权决策形状：hookSpecificOutput.permissionDecision */
+/** Trae 的授权决策形状（PreToolUse 闸门）：hookSpecificOutput.permissionDecision */
 function permissionDecision(
   eventName: string,
   decision: 'allow' | 'deny' | 'ask',

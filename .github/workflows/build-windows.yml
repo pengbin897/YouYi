@@ -1,0 +1,71 @@
+# Windows 打包工作流
+#
+# 两种触发方式：
+#   1. 手动触发（workflow_dispatch）：只构建，产物以 Artifact 形式挂在本次运行下，
+#      用于日常验证安装包，不产生 Release。
+#   2. 推送 v* 标签（如 v0.1.0）：构建后自动创建 GitHub Release 并上传安装包，
+#      electron-updater 依赖 Release 里的 latest.yml 做更新检查。
+#
+# 打包步骤等价于本地的 `npm run pack:win`，但拆开执行是为了给 electron-builder
+# 传 --publish never——发 Release 交给下面的 action 做，避免 electron-builder
+# 在 CI 里检测到 tag 后自行尝试发布（没配 GH_TOKEN 时会直接报错中断）。
+name: Build Windows
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  # 创建 Release 需要 contents 写权限
+  contents: write
+
+jobs:
+  build-win:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: 安装依赖
+        run: npm ci
+
+      # 根 build 会依次构建 shared / hook-bridge / cli / app（electron-vite），
+      # 覆盖了 pack:prepare 里除图标之外的全部前置产物
+      - name: 构建各 workspace
+        run: npm run build
+
+      - name: 生成应用图标
+        run: node scripts/gen-icon.mjs
+
+      # npmRebuild 会在打包时针对 Electron ABI 重编 better-sqlite3，
+      # windows-latest 自带 VS 工具链和 Python，无需额外安装
+      - name: 打包 Windows 安装包
+        run: npx electron-builder --win --publish never
+        working-directory: packages/app
+
+      # 产物输出在仓库根目录 release/（见 electron-builder.yml 的 directories.output）
+      - name: 上传构建产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: YouYi-windows-setup
+          path: |
+            release/*-setup.exe
+            release/*.blockmap
+            release/latest.yml
+          if-no-files-found: error
+
+      - name: 创建 GitHub Release（仅 tag 触发）
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          # latest.yml 和 blockmap 必须一起上传，electron-updater 靠它们做增量更新
+          files: |
+            release/*-setup.exe
+            release/*.blockmap
+            release/latest.yml

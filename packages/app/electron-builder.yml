@@ -95,8 +95,8 @@ nsis:
   # 卸载时保留 ~/.youyi，用户重装后任务历史和微信绑定还在
   deleteAppDataOnUninstall: false
 
-# 发布渠道：换成自己的仓库后 electron-updater 才能检查更新
+# 发布渠道：electron-updater 按这里的 owner/repo 到 GitHub Release 检查更新
 publish:
   provider: github
-  owner: CHANGE_ME
-  repo: youyi
+  owner: pengbin897
+  repo: YouYi

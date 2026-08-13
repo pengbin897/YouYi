@@ -17,7 +17,7 @@ const log = createLogger('main')
 const gotLock = app.requestSingleInstanceLock()
 if (!gotLock) {
   app.quit()
-}
+} else {
 
 const windows = new WindowManager()
 const watchdog = new Watchdog()
@@ -25,6 +25,8 @@ let sentinel: Sentinel | null = null
 let tray: TrayManager | null = null
 let stopUpdateCheck: (() => void) | null = null
 let quitting = false
+let startupComplete = false
+let pendingShow = false
 
 async function quit(): Promise<void> {
   if (quitting) return
@@ -53,13 +55,21 @@ function delay(ms: number): Promise<void> {
   })
 }
 
-app.on('second-instance', () => windows.show())
+function showMainWindow(): void {
+  if (!app.isReady() || !startupComplete) {
+    pendingShow = true
+    return
+  }
+  windows.show()
+}
+
+app.on('second-instance', () => showMainWindow())
 
 app.on('window-all-closed', () => {
   // 关掉窗口只是收进托盘，不退出应用（PRD A1）
 })
 
-app.on('activate', () => windows.show())
+app.on('activate', () => showMainWindow())
 
 app.whenReady().then(async () => {
   if (process.platform === 'darwin' && shouldStartHidden()) {
@@ -86,7 +96,7 @@ app.whenReady().then(async () => {
   }
 
   tray = new TrayManager({
-    onOpen: () => windows.show(),
+    onOpen: () => showMainWindow(),
     onQuit: () => void quit(),
     onToggleWatch: (watching) => {
       sentinel?.setWatching(watching)
@@ -126,8 +136,11 @@ app.whenReady().then(async () => {
   })
 
   // 首次启动或还没走完引导时，直接把窗口打开
-  if (!settings.onboarded || !shouldStartHidden()) {
-    windows.show()
+  startupComplete = true
+  const shouldShow = pendingShow || !settings.onboarded || !shouldStartHidden()
+  pendingShow = false
+  if (shouldShow) {
+    showMainWindow()
   } else {
     windows.create()
   }
@@ -140,3 +153,4 @@ app.on('before-quit', (event) => {
   event.preventDefault()
   void quit()
 })
+}

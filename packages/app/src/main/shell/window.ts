@@ -1,17 +1,18 @@
 /** 主窗口管理：关窗即隐藏（close-to-tray），真正退出只能从托盘菜单发起（PRD A1） */
 
 import { join } from 'node:path'
-import { BrowserWindow, shell } from 'electron'
+import { app, BrowserWindow, shell } from 'electron'
 
 export class WindowManager {
   private window: BrowserWindow | null = null
   /** 用户是否点了「退出哨兵」。只有这时关闭窗口才真的销毁。 */
   private quitting = false
 
-  create(): BrowserWindow {
+  create(): BrowserWindow | null {
     if (this.window && !this.window.isDestroyed()) {
       return this.window
     }
+    if (!app.isReady()) return null
 
     const window = new BrowserWindow({
       width: 1120,
@@ -68,6 +69,7 @@ export class WindowManager {
 
   show(): void {
     const window = this.create()
+    if (!window) return
     if (process.platform === 'darwin') {
       const { app } = require('electron') as typeof import('electron')
       void app.dock?.show()

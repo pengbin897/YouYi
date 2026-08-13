@@ -118,6 +118,8 @@ Electron 应用
 └── 本地存储（SQLite · better-sqlite3 · 默认不上云）
 ```
 
+**Electron 启动生命周期约束**：主进程注册的 `activate`、`second-instance` 等事件，在应用完成 `ready` 且业务初始化完成前不得创建 `BrowserWindow`；启动期间的打开请求应延迟到初始化完成后处理。所有窗口创建路径都必须服从这一约束，避免打包应用在启动竞态下崩溃。
+
 ### 5.1 接入：Hook 机制为主
 
 | Agent | Hook 接入 | 透传/回传通道 | 备注 |

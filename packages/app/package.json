@@ -1,0 +1,46 @@
+{
+  "name": "@youyi/app",
+  "version": "0.1.0",
+  "private": true,
+  "description": "游奕/哨兵 Electron 主应用",
+  "main": "./out/main/index.js",
+  "author": "YouYi",
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "typecheck": "tsc -p tsconfig.node.json --noEmit && tsc -p tsconfig.web.json --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "rebuild": "electron-builder install-app-deps",
+    "pack:prepare": "cd ../.. && npm run build -w @youyi/hook-bridge && npm run build -w @youyi/cli && node scripts/gen-icon.mjs",
+    "pack:mac": "npm run pack:prepare && electron-vite build && electron-builder --mac",
+    "pack:win": "npm run pack:prepare && electron-vite build && electron-builder --win",
+    "pack:dir": "npm run pack:prepare && electron-vite build && electron-builder --dir"
+  },
+  "dependencies": {
+    "@wechatbot/wechatbot": "2.2.0",
+    "better-sqlite3": "13.0.3",
+    "electron-updater": "6.8.9",
+    "nodemailer": "9.0.5",
+    "qrcode": "^1.5.4",
+    "yaml": "^2.9.0"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.11",
+    "@types/node": "^22.10.0",
+    "@types/nodemailer": "^6.4.17",
+    "@types/qrcode": "^1.5.6",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^5.0.0",
+    "@youyi/shared": "*",
+    "electron": "43.3.0",
+    "electron-builder": "26.15.3",
+    "electron-vite": "5.0.0",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "typescript": "5.9.3",
+    "vite": "^7.3.6",
+    "vitest": "^4.1.10"
+  }
+}

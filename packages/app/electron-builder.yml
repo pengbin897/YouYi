@@ -1,0 +1,102 @@
+# 打包配置。productName 用 ASCII，避免 Windows 安装路径出现中文导致部分工具链解析异常；
+# 界面里展示的名字仍是「游奕」。
+appId: com.youyi.sentinel
+productName: YouYi
+copyright: Copyright © 2026 YouYi
+
+directories:
+  buildResources: build
+  # 输出到仓库根目录的 release/（相对本文件所在的 packages/app 目录）
+  output: ../../release
+
+# out 是 electron-vite 的产物目录；node_modules 由 electron-builder 按 dependencies 自动裁剪
+files:
+  - out/**/*
+  - package.json
+  - '!**/*.map'
+  - '!**/{.eslintrc,.editorconfig,.prettierrc,tsconfig*.json,*.md}'
+  # better-sqlite3 带的 sqlite3 源码只在从源码编译时需要，装包里用不到（约 10MB）
+  - '!**/node_modules/better-sqlite3/{deps,src}/**'
+
+# 桥接程序与 CLI 必须以真实文件形式落地（要 copy 到 ~/.youyi/bin 被外部拉起），
+# 不能塞进 asar 里；bridge-installer.ts 读的就是 process.resourcesPath 下这两个目录
+extraResources:
+  - from: ../hook-bridge/dist
+    to: hook-bridge
+    filter:
+      - '**/*.js'
+  - from: ../cli/dist
+    to: cli
+    filter:
+      - '**/*.js'
+
+asar: true
+# better-sqlite3 是原生模块，.node 文件在 asar 里无法 dlopen
+asarUnpack:
+  - '**/node_modules/better-sqlite3/**'
+  - '**/*.node'
+
+npmRebuild: true
+
+mac:
+  category: public.app-category.developer-tools
+  target:
+    - target: dmg
+      arch:
+        - arm64
+        - x64
+    - target: zip # electron-updater 在 macOS 上依赖 zip 做增量替换
+      arch:
+        - arm64
+        - x64
+  icon: build/icon.png
+  # 预编译产物是 Node-API 的（跨 ABI 通用），按平台只留自己那份即可
+  files:
+    - '!**/node_modules/better-sqlite3/prebuilds/{win32,linux,linuxmusl}-*.node'
+  hardenedRuntime: true
+  gatekeeperAssess: false
+  entitlements: build/entitlements.mac.plist
+  entitlementsInherit: build/entitlements.mac.plist
+  # 未配置苹果开发者账号时先关掉公证，否则打包会在最后一步失败
+  notarize: false
+  extendInfo:
+    # 值守类应用会被系统在登录时拉起，这里声明后台能力，避免被过度节流
+    LSMultipleInstancesProhibited: true
+
+dmg:
+  artifactName: ${productName}-${version}-${arch}.${ext}
+  contents:
+    - x: 140
+      y: 200
+    - x: 400
+      y: 200
+      type: link
+      path: /Applications
+
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+  icon: build/icon.png
+  files:
+    - '!**/node_modules/better-sqlite3/prebuilds/{darwin,linux,linuxmusl}-*.node'
+
+nsis:
+  # 不装到 Program Files：写 ~/.youyi 和改各家 Agent 配置都不需要管理员权限，
+  # 装成用户级能省掉 UAC 弹窗，也让开机自启更稳
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: 游奕
+  artifactName: ${productName}-${version}-setup.${ext}
+  # 卸载时保留 ~/.youyi，用户重装后任务历史和微信绑定还在
+  deleteAppDataOnUninstall: false
+
+# 发布渠道：换成自己的仓库后 electron-updater 才能检查更新
+publish:
+  provider: github
+  owner: CHANGE_ME
+  repo: youyi

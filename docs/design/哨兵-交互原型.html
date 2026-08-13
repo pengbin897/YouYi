@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>哨兵 · 交互原型</title>
+<style>
+:root{
+  --blue:#185FA5; --blue-800:#0C447C; --blue-50:#E6F1FB; --blue-100:#B5D4F4;
+  --ink:#2C2C2A; --ink2:#5F5E5A; --ink3:#888780;
+  --bg:#F5F6F8; --card:#FFFFFF; --border:#E3E5E8; --border2:#D3D1C7;
+  --orange:#854F0B; --orange-bg:#FAEEDA; --orange-400:#EF9F27;
+  --red:#A32D2D; --red-bg:#FCEBEB;
+  --green:#3B6D11; --green-bg:#EAF3DE;
+  --wx:#07C160; --wx-bg:#EDEDED; --wx-bubble:#FFFFFF;
+  --radius:10px;
+  --font:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:var(--font);background:var(--bg);color:var(--ink);font-size:14px;-webkit-font-smoothing:antialiased}
+button{font-family:var(--font);cursor:pointer;border:none;background:none}
+
+/* ===== Header ===== */
+.hd{position:sticky;top:0;z-index:50;background:#fff;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:20px;padding:12px 32px}
+.hd-logo{display:flex;align-items:center;gap:10px;font-weight:500;font-size:16px;color:var(--blue-800)}
+.hd-logo .dot{width:12px;height:12px;border-radius:50%;background:var(--blue);box-shadow:0 0 0 4px var(--blue-50)}
+.hd-sub{color:var(--ink3);font-size:12px}
+.hd-tabs{margin-left:auto;display:flex;background:var(--bg);border-radius:8px;padding:3px;gap:2px}
+.hd-tabs button{padding:7px 18px;border-radius:6px;font-size:13px;color:var(--ink2);transition:all .15s}
+.hd-tabs button.on{background:#fff;color:var(--blue-800);font-weight:500;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.hd-tabs button:hover{color:var(--blue)}
+
+/* ===== 容器 ===== */
+.panel{display:none;padding:36px 32px 64px}
+.panel.on{display:block}
+.wrap{max-width:1040px;margin:0 auto}
+
+/* ===== macOS 窗口 ===== */
+.mac{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;box-shadow:0 12px 40px rgba(20,30,40,.08)}
+.mac-bar{display:flex;align-items:center;gap:8px;padding:11px 16px;border-bottom:1px solid var(--border);background:#FAFBFC}
+.mac-bar .tl{width:12px;height:12px;border-radius:50%}
+.tl-r{background:#FF5F57}.tl-y{background:#FEBC2E}.tl-g{background:#28C840}
+.mac-bar .tt{margin-left:10px;font-size:12.5px;color:var(--ink3)}
+.mac-bar .badge{margin-left:auto;font-size:11px;color:var(--blue);background:var(--blue-50);padding:3px 10px;border-radius:999px}
+.mac-body{padding:30px 40px 26px;min-height:470px}
+
+/* 步骤指示器 */
+.steps{display:flex;align-items:center;justify-content:center;gap:0;margin-bottom:28px}
+.step{display:flex;align-items:center;gap:8px}
+.step .n{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:500;background:var(--border);color:var(--ink3);transition:all .2s}
+.step .lab{font-size:12.5px;color:var(--ink3)}
+.step.done .n{background:var(--green);color:#fff}
+.step.cur .n{background:var(--blue);color:#fff;box-shadow:0 0 0 4px var(--blue-50)}
+.step.cur .lab{color:var(--blue-800);font-weight:500}
+.step-line{width:44px;height:2px;background:var(--border);margin:0 10px}
+.step-line.done{background:var(--green)}
+
+/* 步骤内容 */
+.step-body{display:none;animation:fadein .25s ease}
+.step-body.on{display:block}
+@keyframes fadein{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.st-title{font-size:21px;font-weight:500;color:var(--ink);margin-bottom:6px}
+.st-sub{font-size:13.5px;color:var(--ink2);margin-bottom:24px;line-height:1.7}
+
+/* 欢迎 */
+.hero{display:flex;gap:40px;align-items:flex-start}
+.hero-l{flex:1}
+.hero-l .big{font-size:26px;font-weight:500;line-height:1.45;color:var(--blue-800);margin-bottom:14px}
+.hero-l .desc{font-size:14px;color:var(--ink2);line-height:1.8;margin-bottom:22px}
+.feats{display:flex;flex-direction:column;gap:12px}
+.feat{display:flex;gap:12px;align-items:flex-start}
+.feat .ic{width:30px;height:30px;border-radius:8px;background:var(--blue-50);display:flex;align-items:center;justify-content:center;color:var(--blue);font-size:14px;flex-shrink:0}
+.feat .t{font-size:13.5px;color:var(--ink);font-weight:500;margin-bottom:2px}
+.feat .s{font-size:12.5px;color:var(--ink2)}
+.hero-r{width:210px;flex-shrink:0;background:var(--blue-50);border-radius:12px;padding:18px;border:1px solid var(--blue-100)}
+.hero-r .rt{font-size:13px;font-weight:500;color:var(--blue-800);margin-bottom:10px}
+.hero-r .row{display:flex;justify-content:space-between;font-size:12px;color:var(--ink2);padding:6px 0;border-bottom:1px dashed var(--blue-100)}
+.hero-r .row:last-child{border-bottom:none}
+.hero-r .row b{color:var(--blue-800);font-weight:500}
+
+/* 发现列表 */
+.scan{display:flex;align-items:center;gap:10px;color:var(--ink2);font-size:13px;margin-bottom:16px}
+.scan .ring{width:14px;height:14px;border-radius:50%;border:2px solid var(--blue-100);border-top-color:var(--blue);animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.agents{display:flex;flex-direction:column;gap:10px;margin-bottom:16px}
+.agent{display:flex;align-items:center;gap:12px;background:#FAFBFC;border:1px solid var(--border);border-radius:10px;padding:12px 14px;transition:all .15s}
+.agent:hover{border-color:var(--blue-100)}
+.agent .av{width:34px;height:34px;border-radius:8px;background:var(--blue-50);color:var(--blue-800);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;flex-shrink:0}
+.agent .nm{font-size:13.5px;font-weight:500}
+.agent .st{font-size:12px;color:var(--ink3);margin-top:1px}
+.agent .run{font-size:11px;color:var(--green);background:var(--green-bg);padding:2px 8px;border-radius:999px;margin-left:auto}
+.agent .ck{width:20px;height:20px;border-radius:6px;border:1.5px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;transition:all .15s;flex-shrink:0}
+.agent.on .ck{background:var(--blue);border-color:var(--blue)}
+.agent.on{border-color:var(--blue-100);background:var(--blue-50)}
+.tip{font-size:12px;color:var(--ink3);line-height:1.7}
+
+/* 扫码 */
+.qr-row{display:flex;gap:36px;align-items:center}
+.qr-box{width:190px;height:190px;background:#FAFBFC;border:1px dashed var(--border2);border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--ink3);font-size:12px;flex-shrink:0}
+.qr-box .q{width:56px;height:56px;border-radius:10px;background:var(--border2);opacity:.6;position:relative}
+.qr-box .q::before,.qr-box .q::after{content:"";position:absolute;background:var(--ink3)}
+.qr-box .q::before{left:10px;right:10px;top:50%;height:2px;transform:translateY(-50%)}
+.qr-box .q::after{top:10px;bottom:10px;left:50%;width:2px;transform:translateX(-50%)}
+.qr-steps{display:flex;flex-direction:column;gap:14px}
+.qr-step{display:flex;gap:12px;align-items:flex-start}
+.qr-step .no{width:22px;height:22px;border-radius:50%;background:var(--blue-50);color:var(--blue-800);font-size:12px;font-weight:500;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.qr-step .t{font-size:13.5px;line-height:1.6;color:var(--ink2)}
+.bound{display:none;align-items:center;gap:10px;background:var(--green-bg);border:1px solid #C0DD97;color:var(--green);font-size:13px;padding:10px 14px;border-radius:10px}
+.bound.on{display:flex}
+.bound .ok{width:18px;height:18px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px}
+
+/* 渠道选择 */
+.ch-row{display:flex;gap:14px;margin-bottom:26px}
+.ch{flex:1;border:1.5px solid var(--border);border-radius:12px;padding:14px 16px;cursor:pointer;display:flex;align-items:center;gap:12px;transition:all .15s;background:#fff}
+.ch:hover{border-color:var(--blue-100)}
+.ch.on{border-color:var(--blue);background:var(--blue-50)}
+.ch .ch-ic{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:500;flex-shrink:0}
+.ch .cn{font-size:14.5px;font-weight:500}
+.ch .cs{font-size:11.5px;color:var(--ink3);margin-top:2px}
+.ch.on .cn{color:var(--blue-800)}
+.ch .ch-ck{width:20px;height:20px;border-radius:50%;border:1.5px solid var(--border2);margin-left:auto;display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff;flex-shrink:0;transition:all .15s}
+.ch.on .ch-ck{background:var(--blue);border-color:var(--blue)}
+.hook-panel{display:none;animation:fadein .25s ease}
+.hook-panel.on{display:block}
+.hook-steps{display:flex;flex-direction:column;gap:12px;margin-bottom:18px}
+.hook-steps .hs{display:flex;gap:12px;align-items:flex-start;font-size:13.5px;color:var(--ink2);line-height:1.65}
+.hook-steps .no{width:22px;height:22px;border-radius:50%;background:var(--blue-50);color:var(--blue-800);font-size:12px;font-weight:500;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.hook-input{display:flex;gap:10px;margin-bottom:4px}
+.hook-input input{flex:1;border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:13px;font-family:var(--font);outline:none;background:#FAFBFC}
+.hook-input input:focus{border-color:var(--blue-100);background:#fff}
+.hook-note{font-size:12px;color:var(--ink3);line-height:1.7}
+
+/* 档位 */
+.tiers{display:flex;gap:14px;margin-bottom:18px}
+.tier{flex:1;border:1.5px solid var(--border);border-radius:12px;padding:16px;cursor:pointer;transition:all .15s;background:#fff}
+.tier:hover{border-color:var(--blue-100)}
+.tier.on{border-color:var(--blue);background:var(--blue-50)}
+.tier .tn{font-size:15px;font-weight:500;margin-bottom:3px;display:flex;align-items:center;gap:8px}
+.tier.on .tn{color:var(--blue-800)}
+.tier .td{font-size:12px;color:var(--ink2);line-height:1.7}
+.tier .rec{font-size:10.5px;background:var(--blue);color:#fff;padding:2px 8px;border-radius:999px}
+.switch-row{display:flex;align-items:center;justify-content:space-between;background:#FAFBFC;border:1px solid var(--border);border-radius:10px;padding:13px 16px}
+.switch-row .l{font-size:13.5px;font-weight:500}
+.switch-row .s{font-size:12px;color:var(--ink3);margin-top:2px}
+.sw{width:44px;height:25px;border-radius:999px;background:var(--border2);position:relative;transition:all .2s}
+.sw::after{content:"";position:absolute;top:2.5px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:all .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.sw.on{background:var(--wx)}
+.sw.on::after{left:21px}
+
+/* 完成 */
+.done-card{background:var(--green-bg);border:1px solid #C0DD97;border-radius:12px;padding:18px 20px;margin-bottom:20px}
+.done-card .dt{font-size:15px;font-weight:500;color:var(--green);margin-bottom:10px}
+.done-sum{display:flex;gap:14px;flex-wrap:wrap}
+.done-item{background:#fff;border-radius:10px;padding:12px 16px;font-size:12.5px;color:var(--ink2);display:flex;align-items:center;gap:8px}
+.done-item b{color:var(--ink);font-size:16px;font-weight:500}
+.done-item .dv{width:8px;height:8px;border-radius:50%;background:var(--blue)}
+.running-state{display:none;align-items:center;gap:10px;background:var(--blue-50);border:1px solid var(--blue-100);border-radius:10px;padding:12px 16px;font-size:13px;color:var(--blue-800);margin-top:16px}
+.running-state.on{display:flex}
+.pulse{width:9px;height:9px;border-radius:50%;background:var(--blue);animation:pulse 1.6s ease infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.8)}}
+
+/* 底部按钮 */
+.foot{display:flex;justify-content:flex-end;gap:12px;margin-top:28px;padding-top:18px;border-top:1px solid var(--border)}
+.btn{padding:9px 22px;border-radius:8px;font-size:13.5px;font-weight:500;transition:all .15s}
+.btn-ghost{color:var(--ink2);background:#fff;border:1px solid var(--border2)}
+.btn-ghost:hover{border-color:var(--ink3)}
+.btn-pri{background:var(--blue);color:#fff}
+.btn-pri:hover{background:var(--blue-800)}
+.btn-pri:disabled{opacity:.4;cursor:not-allowed}
+.btn-green{background:var(--wx);color:#fff}
+.btn-green:hover{background:#06AD56}
+
+/* ===== iPhone ===== */
+.iphone-wrap{display:flex;gap:36px;align-items:flex-start;justify-content:center}
+.iphone{display:inline-block;padding:12px;background:#000;border-radius:60px;box-shadow:0 0 0 2px #1f2937,0 24px 60px rgba(0,0,0,.28);flex-shrink:0}
+.iphone .screen{position:relative;width:370px;height:760px;border-radius:48px;overflow:hidden;background:#fff}
+.statusbar{position:absolute;top:0;left:0;right:0;height:54px;display:flex;align-items:center;justify-content:space-between;padding:0 30px;font-size:15px;font-weight:600;z-index:20;pointer-events:none}
+.island{position:absolute;top:12px;left:50%;transform:translateX(-50%);width:120px;height:36px;background:#000;border-radius:999px;z-index:30}
+.sb-icons{display:flex;align-items:center;gap:7px}
+.batt{width:24px;height:11px;border:1.4px solid currentColor;border-radius:3px;padding:1px;position:relative}
+.batt i{display:block;height:100%;background:currentColor;border-radius:1px;width:80%}
+.batt::after{content:"";position:absolute;top:3px;right:-3.5px;width:2px;height:5px;background:currentColor;border-radius:0 1px 1px 0}
+.homebar{position:absolute;bottom:9px;left:50%;transform:translateX(-50%);width:132px;height:5px;background:rgba(0,0,0,.28);border-radius:999px;z-index:10}
+.wx-content{position:absolute;top:54px;left:0;right:0;bottom:70px;overflow-y:auto;background:var(--wx-bg)}
+.wx-head{position:absolute;top:54px;left:0;right:0;height:46px;background:#EDEDED;border-bottom:1px solid #D9D9D9;display:flex;align-items:center;justify-content:center;z-index:15}
+.wx-head .nm{font-size:16px;font-weight:500}
+.wx-head .back{position:absolute;left:14px;font-size:15px;color:var(--ink2)}
+.msgs{padding:12px 12px 20px;display:flex;flex-direction:column;gap:16px}
+.msg{display:flex;gap:9px;align-items:flex-start;animation:fadein .3s ease;max-width:100%}
+.msg.right{flex-direction:row-reverse}
+.msg .av{width:38px;height:38px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;color:#fff;flex-shrink:0}
+.msg .bubble{max-width:76%;position:relative}
+.msg .bubble .inner{background:var(--wx-bubble);border-radius:3px 10px 10px 10px;padding:9px 12px;font-size:14px;line-height:1.65;box-shadow:0 1px 1px rgba(0,0,0,.05);white-space:pre-wrap}
+.msg.right .bubble .inner{background:var(--wx);color:#fff;border-radius:10px 3px 10px 10px}
+.msg .meta{font-size:10.5px;color:#A0A0A0;margin-top:4px;padding-left:2px}
+.msg.right .meta{text-align:right;padding-right:2px}
+.msg .tag{display:inline-block;font-size:10.5px;padding:1.5px 8px;border-radius:999px;margin-bottom:4px;background:#E8E8E8;color:var(--ink2)}
+.msg[data-t="confirm"] .tag{background:var(--orange-bg);color:var(--orange)}
+.msg[data-t="fail"] .tag{background:var(--red-bg);color:var(--red)}
+.msg[data-t="ok"] .tag{background:var(--green-bg);color:var(--green)}
+.msg[data-t="info"] .tag{background:var(--blue-50);color:var(--blue-800)}
+.msg .guide{margin-top:6px;padding-top:7px;border-top:1px dashed var(--border2);font-size:12px;color:var(--ink2)}
+.msg.right .guide{border-top-color:rgba(255,255,255,.3);color:rgba(255,255,255,.85)}
+
+/* 快捷回复 */
+.quick{position:absolute;left:0;right:0;bottom:24px;background:#F7F7F7;border-top:1px solid #E0E0E0;padding:9px 12px;z-index:15}
+.quick .row{display:flex;gap:8px;overflow-x:auto}
+.qbtn{flex-shrink:0;font-size:12.5px;color:var(--blue-800);background:#fff;border:1px solid var(--blue-100);border-radius:999px;padding:5px 14px;transition:all .12s}
+.qbtn:hover{background:var(--blue-50)}
+.play-row{display:flex;gap:8px;align-items:center}
+.play-btn{flex-shrink:0;font-size:12.5px;color:#fff;background:var(--blue);border-radius:999px;padding:5px 14px}
+.play-btn:hover{background:var(--blue-800)}
+.input-row{display:flex;gap:8px;margin-top:8px}
+.input-row input{flex:1;border:1px solid var(--border);border-radius:999px;padding:8px 14px;font-size:13px;font-family:var(--font);outline:none;background:#fff}
+.input-row input:focus{border-color:var(--blue-100)}
+.input-row button{background:var(--wx);color:#fff;border-radius:999px;padding:8px 18px;font-size:13px}
+.input-row button:hover{background:#06AD56}
+
+/* 右侧说明 */
+.side{width:300px;flex-shrink:0;display:flex;flex-direction:column;gap:14px;position:sticky;top:90px}
+.side-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:16px 18px}
+.side-card .h{font-size:13px;font-weight:500;color:var(--blue-800);margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.side-card .h .dv{width:8px;height:8px;border-radius:50%;background:var(--blue)}
+.side-card p{font-size:12.5px;color:var(--ink2);line-height:1.75}
+.side-card ul{list-style:none;display:flex;flex-direction:column;gap:7px;margin-top:4px}
+.side-card li{font-size:12.5px;color:var(--ink2);display:flex;gap:8px;line-height:1.6}
+.side-card li b{color:var(--ink);font-weight:500;flex-shrink:0}
+.flowline{display:flex;flex-direction:column;gap:0}
+.flow-step{display:flex;gap:10px;padding:8px 0}
+.flow-step .fn{width:22px;height:22px;border-radius:50%;background:var(--blue-50);color:var(--blue-800);font-size:11.5px;font-weight:500;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.flow-step .ft{font-size:12.5px;color:var(--ink2);line-height:1.6}
+.flow-step .ft b{color:var(--ink)}
+.note{font-size:12px;color:var(--ink3);line-height:1.7;background:#FAFBFC;border:1px dashed var(--border2);border-radius:8px;padding:10px 12px}
+</style>
+</head>
+<body>
+
+<header class="hd">
+  <div class="hd-logo"><span class="dot"></span>哨兵 <span style="color:var(--ink3);font-weight:400;font-size:13px">Sentinel</span></div>
+  <div class="hd-sub">多 Agent 值守中控 · 交互原型 v0.6</div>
+  <div class="hd-tabs">
+    <button id="tabA" class="on" onclick="switchTab('A')">首次引导 · 桌面端</button>
+    <button id="tabB" onclick="switchTab('B')">微信对话 · 手机端</button>
+  </div>
+</header>
+
+<!-- ============ Part A 首次引导 ============ -->
+<section id="panelA" class="panel on">
+  <div class="wrap">
+    <div class="mac">
+      <div class="mac-bar">
+        <span class="tl tl-r"></span><span class="tl tl-y"></span><span class="tl tl-g"></span>
+        <span class="tt">哨兵 · 首次设置</span>
+        <span class="badge">Electron · macOS / Windows</span>
+      </div>
+      <div class="mac-body">
+        <div class="steps">
+          <div class="step cur" data-s="1"><span class="n">1</span><span class="lab">欢迎</span></div>
+          <div class="step-line"></div>
+          <div class="step" data-s="2"><span class="n">2</span><span class="lab">发现 AI 应用</span></div>
+          <div class="step-line"></div>
+          <div class="step" data-s="3"><span class="n">3</span><span class="lab">绑定渠道</span></div>
+          <div class="step-line"></div>
+          <div class="step" data-s="4"><span class="n">4</span><span class="lab">打扰档位</span></div>
+          <div class="step-line"></div>
+          <div class="step" data-s="5"><span class="n">5</span><span class="lab">开始值守</span></div>
+        </div>
+
+        <!-- S1 欢迎 -->
+        <div class="step-body on" id="sb1">
+          <div class="hero">
+            <div class="hero-l">
+              <div class="big">让 AI 干着活，<br>你去忙你的。</div>
+              <div class="desc">哨兵自动发现你电脑上的 AI 应用，任务的关键节点——完成、失败、需要你确认——实时推送到微信。不用守着电脑，微信里就能继续和 AI 对话。</div>
+              <div class="feats">
+                <div class="feat"><span class="ic">发</span><div><div class="t">自动发现，零配置</div><div class="s">扫描本机 AI 应用，勾选即可，不用填任何路径</div></div></div>
+                <div class="feat"><span class="ic">微</span><div><div class="t">微信一条龙</div><div class="s">收通知、发指令、和 Agent 对话，一个微信搞定</div></div></div>
+                <div class="feat"><span class="ic">静</span><div><div class="t">只在关键时候打扰你</div><div class="s">失败、需要确认、可能卡住——其他时候不响</div></div></div>
+              </div>
+            </div>
+            <div class="hero-r">
+              <div class="rt">哨兵会帮你</div>
+              <div class="row"><span>监控 AI 应用</span><b>7 个</b></div>
+              <div class="row"><span>通知渠道</span><b>微信</b></div>
+              <div class="row"><span>打扰方式</span><b>三档可选</b></div>
+              <div class="row"><span>数据存储</span><b>本地</b></div>
+              <div class="row"><span>价格</span><b>免费</b></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- S2 自动发现 -->
+        <div class="step-body" id="sb2">
+          <div class="st-title">发现你电脑上的 AI 应用</div>
+          <div class="st-sub">哨兵自动扫描本机运行与已安装的 AI 应用。勾选要监控的，完成后会在后台通过 Hook 接入任务事件。</div>
+          <div class="scan" id="scanBar"><span class="ring"></span><span>正在扫描本机应用…</span></div>
+          <div class="agents" id="agentList"></div>
+          <div class="tip">没扫到的 AI 应用？可在「更多设置 → 手动添加」中指定，或等待该应用运行后自动补扫。</div>
+        </div>
+
+        <!-- S3 绑定渠道 -->
+        <div class="step-body" id="sb3">
+          <div class="st-title">绑定通知渠道</div>
+          <div class="st-sub">任务通知和 Agent 对话通过选定的渠道进行。一次绑定一个渠道，随时可在设置里更换。</div>
+          <div class="ch-row" id="chRow">
+            <div class="ch on" data-c="wechat"><span class="ch-ic" style="background:#07C160">微</span><div><div class="cn">微信</div><div class="cs">扫码绑定 · 推荐</div></div><span class="ch-ck">✓</span></div>
+            <div class="ch" data-c="dingtalk"><span class="ch-ic" style="background:#0089FF">钉</span><div><div class="cn">钉钉</div><div class="cs">群机器人 webhook</div></div><span class="ch-ck">✓</span></div>
+            <div class="ch" data-c="feishu"><span class="ch-ic" style="background:#3370FF">飞</span><div><div class="cn">飞书</div><div class="cs">群机器人 webhook</div></div><span class="ch-ck">✓</span></div>
+          </div>
+          <div class="qr-row" id="panel-wechat">
+            <div class="qr-box"><div class="q"></div><span>微信扫码 · 接入真实二维码</span></div>
+            <div class="qr-steps">
+              <div class="qr-step"><span class="no">1</span><span class="t">打开微信「扫一扫」，扫描左侧二维码</span></div>
+              <div class="qr-step"><span class="no">2</span><span class="t">关注「哨兵」服务号并确认绑定</span></div>
+              <div class="qr-step"><span class="no">3</span><span class="t">绑定成功后，微信会收到一条欢迎消息</span></div>
+            </div>
+          </div>
+          <div class="hook-panel" id="panel-dingtalk">
+            <div class="hook-steps">
+              <div class="hs"><span class="no">1</span><span>在钉钉创建群聊，添加「自定义机器人」</span></div>
+              <div class="hs"><span class="no">2</span><span>复制机器人的 Webhook 地址</span></div>
+              <div class="hs"><span class="no">3</span><span>粘贴到下方输入框，点击绑定</span></div>
+            </div>
+            <div class="hook-input">
+              <input id="ddInput" placeholder="https://oapi.dingtalk.com/robot/send?access_token=…" onkeydown="if(event.key==='Enter')simBind()">
+              <button class="btn btn-pri" onclick="simBind()">绑定</button>
+            </div>
+            <div class="hook-note">绑定后，钉钉群机器人会收到哨兵的任务通知；在群里发消息即可透传给 Agent。</div>
+          </div>
+          <div class="hook-panel" id="panel-feishu">
+            <div class="hook-steps">
+              <div class="hs"><span class="no">1</span><span>在飞书创建群聊，添加「自定义机器人」</span></div>
+              <div class="hs"><span class="no">2</span><span>复制机器人的 Webhook 地址</span></div>
+              <div class="hs"><span class="no">3</span><span>粘贴到下方输入框，点击绑定</span></div>
+            </div>
+            <div class="hook-input">
+              <input id="fsInput" placeholder="https://open.feishu.cn/open-apis/bot/v2/hook/…" onkeydown="if(event.key==='Enter')simBind()">
+              <button class="btn btn-pri" onclick="simBind()">绑定</button>
+            </div>
+            <div class="hook-note">绑定后，飞书群机器人会收到哨兵的任务通知；在群里发消息即可透传给 Agent。</div>
+          </div>
+          <div class="bound" id="boundBox"><span class="ok">✓</span><span id="boundText">微信已绑定 · 通知与对话通道已就绪</span></div>
+          <div class="foot" style="border:none;padding:0;margin-top:22px">
+            <button class="btn btn-ghost" id="bindBtn" onclick="simBind()">模拟扫码绑定</button>
+          </div>
+        </div>
+
+        <!-- S4 打扰档位 -->
+        <div class="step-body" id="sb4">
+          <div class="st-title">选一个打扰档位</div>
+          <div class="st-sub">哨兵只在档位允许的事件上推送。可以随时在设置里改。</div>
+          <div class="tiers" id="tierBox">
+            <div class="tier" data-t="quiet"><div class="tn">安静</div><div class="td">只在失败、需要确认、可能卡住时通知</div></div>
+            <div class="tier on" data-t="std"><div class="tn">标准 <span class="rec">推荐</span></div><div class="td">安静 + 任务完成时通知</div></div>
+            <div class="tier" data-t="full"><div class="tn">全量</div><div class="td">标准 + 关键进度节点</div></div>
+          </div>
+          <div class="switch-row">
+            <div><div class="l">免打扰时段</div><div class="s">22:00 – 08:00 只推送「需要你确认」</div></div>
+            <div class="sw on" id="dndSw" onclick="toggleDnd()"></div>
+          </div>
+        </div>
+
+        <!-- S5 完成 -->
+        <div class="step-body" id="sb5">
+          <div class="st-title">准备就绪</div>
+          <div class="st-sub">哨兵将在后台值守。窗口可以随时关掉，它不会退出。</div>
+          <div class="done-card">
+            <div class="dt">值守配置</div>
+            <div class="done-sum">
+              <div class="done-item"><span class="dv"></span>监控 AI 应用 <b id="sumAgents">0</b> 个</div>
+              <div class="done-item"><span class="dv" style="background:var(--wx)"></span><b id="sumChannel">微信</b> <span id="sumChannelSt">待绑定</span></div>
+              <div class="done-item"><span class="dv" style="background:var(--orange-400)"></span>打扰档 <b id="sumTier">标准</b></div>
+              <div class="done-item"><span class="dv" style="background:var(--green)"></span>免打扰 <b id="sumDnd">已开启</b></div>
+            </div>
+          </div>
+          <div class="running-state" id="runningBox"><span class="pulse"></span>哨兵正在值守中 · 去忙你的事，微信会找你的</div>
+        </div>
+
+        <div class="foot">
+          <button class="btn btn-ghost" id="btnPrev" onclick="goStep(-1)">上一步</button>
+          <button class="btn btn-pri" id="btnNext" onclick="goStep(1)">下一步</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ Part B 微信对话 ============ -->
+<section id="panelB" class="panel">
+  <div class="wrap" style="max-width:1080px">
+    <div class="iphone-wrap">
+      <div class="iphone">
+        <div class="screen">
+          <div class="island"></div>
+          <div class="statusbar">
+            <span>9:41</span>
+            <div class="sb-icons">
+              <svg width="16" height="12" viewBox="0 0 16 12" fill="none"><path d="M8 11.5a1 1 0 100-2 1 1 0 000 2z" fill="currentColor"/><path d="M3 7.5a7 7 0 0110 0" stroke="currentColor" stroke-width="1.3" fill="none" stroke-linecap="round"/><path d="M1 4.5a11 11 0 0114 0" stroke="currentColor" stroke-width="1.3" fill="none" stroke-linecap="round" opacity="0.7"/></svg>
+              <div class="batt"><i></i></div>
+            </div>
+          </div>
+          <div class="wx-head"><span class="back">‹</span><span class="nm">哨兵</span></div>
+          <div class="wx-content" id="wxContent">
+            <div class="msgs" id="wxMsgs"></div>
+          </div>
+          <div class="quick">
+            <div class="row" id="quickRow">
+              <button class="play-btn" onclick="playScript()">▶ 播放演示对话</button>
+              <button class="qbtn" onclick="quickMsg('继续')">继续</button>
+              <button class="qbtn" onclick="quickMsg('停止')">停止</button>
+              <button class="qbtn" onclick="quickMsg('状态')">状态</button>
+              <button class="qbtn" onclick="quickMsg('新任务')">新任务</button>
+            </div>
+            <div class="input-row">
+              <input id="wxInput" placeholder="发消息给 Agent…（原样透传）" onkeydown="if(event.key==='Enter')sendMsg()">
+              <button onclick="sendMsg()">发送</button>
+            </div>
+          </div>
+          <div class="homebar"></div>
+        </div>
+      </div>
+      <div class="side">
+        <div class="side-card">
+          <div class="h"><span class="dv"></span>场景：睡前派任务，微信收结果</div>
+          <p>你给 Claude Code 派了「数据清洗」任务，然后去吃饭。Agent 需要确认文件访问权限——微信收到通知，你回一句「继续」，任务继续跑，完成后微信通知你。</p>
+        </div>
+        <div class="side-card">
+          <div class="h"><span class="dv"></span>消息怎么流动</div>
+          <div class="flowline">
+            <div class="flow-step"><span class="fn">1</span><span class="ft"><b>Agent Hook 上报</b> 任务事件到达哨兵</span></div>
+            <div class="flow-step"><span class="fn">2</span><span class="ft"><b>微信通知</b> 文本 + 引导语</span></div>
+            <div class="flow-step"><span class="fn">3</span><span class="ft"><b>你回复</b> 打字或语音，原样透传</span></div>
+            <div class="flow-step"><span class="fn">4</span><span class="ft"><b>Agent 执行</b> 回复与事件回传微信</span></div>
+          </div>
+        </div>
+        <div class="side-card">
+          <div class="h"><span class="dv"></span>能做的事</div>
+          <ul>
+            <li><b>继续/停止/重试</b>透传给 Agent，由它理解执行</li>
+            <li><b>新任务：xxx</b>给最近活跃的 Agent 派活</li>
+            <li><b>交给 Claude Code：xxx</b>指定目标</li>
+            <li><b>状态</b>哨兵自答，不打扰 Agent</li>
+            <li><b>全部停止</b>紧急广播，需强确认</li>
+          </ul>
+        </div>
+        <div class="note">哨兵无 AI 对话能力：消息原样透传，语义由 Agent 自己理解。微信只支持文本/图片/语音，无卡片按钮。</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+/* ================= Part A 状态 ================= */
+var curStep = 1;
+var selectedAgents = 0;
+var bound = false, tier = 'std', dnd = true, channel = 'wechat';
+
+var agentData = [
+  {id:'claude', name:'Claude Code', sub:'AI 编程助手', run:true, on:true},
+  {id:'chatgpt', name:'ChatGPT', sub:'桌面应用', run:false, on:true},
+  {id:'qoder', name:'Qoder Work', sub:'AI 集成开发环境', run:false, on:true},
+  {id:'trae', name:'Trae Work', sub:'AI 集成开发环境', run:false, on:true},
+  {id:'openclaw', name:'OpenClaw', sub:'AI 助手', run:false, on:true}
+];
+
+function renderAgents(){
+  var list = document.getElementById('agentList');
+  list.innerHTML = '';
+  agentData.forEach(function(a){
+    var el = document.createElement('div');
+    el.className = 'agent' + (a.on ? ' on' : '');
+    el.innerHTML = '<span class="av">' + a.name.slice(0,2) + '</span>' +
+      '<div><div class="nm">' + a.name + '</div><div class="st">' + a.sub + '</div></div>' +
+      (a.run ? '<span class="run">运行中</span>' : '') +
+      '<span class="ck">✓</span>';
+    el.onclick = function(){ a.on = !a.on; renderAgents(); };
+    list.appendChild(el);
+  });
+  updateSum();
+}
+
+function updateSum(){
+  selectedAgents = agentData.filter(function(a){return a.on}).length;
+  document.getElementById('sumAgents').textContent = selectedAgents;
+}
+
+function goStep(d){
+  var next = curStep + d;
+  if(next < 1 || next > 5) return;
+  if(next === 2 && curStep === 1){
+    var scan = document.getElementById('scanBar');
+    document.getElementById('agentList').innerHTML = '';
+    scan.style.display = 'flex';
+    setTimeout(function(){ scan.style.display = 'none'; renderAgents(); }, 900);
+  }
+  curStep = next;
+  renderStep();
+}
+
+function renderStep(){
+  document.querySelectorAll('.step-body').forEach(function(el){ el.classList.remove('on'); });
+  document.getElementById('sb' + curStep).classList.add('on');
+  document.querySelectorAll('.steps .step').forEach(function(s){
+    var n = parseInt(s.getAttribute('data-s'));
+    s.classList.toggle('cur', n === curStep);
+    s.classList.toggle('done', n < curStep);
+  });
+  document.querySelectorAll('.steps .step-line').forEach(function(l, i){
+    l.classList.toggle('done', i < curStep - 1);
+  });
+  document.getElementById('btnPrev').disabled = curStep === 1;
+  var nxt = document.getElementById('btnNext');
+  if(curStep === 5){
+    nxt.textContent = '开始值守';
+    nxt.classList.add('btn-green'); nxt.classList.remove('btn-pri');
+  }else{
+    nxt.textContent = '下一步';
+    nxt.classList.remove('btn-green'); nxt.classList.add('btn-pri');
+  }
+  if(curStep === 5 && bound){
+    nxt.textContent = '开始值守';
+  }
+}
+
+function simBind(){
+  bound = true;
+  document.getElementById('boundBox').classList.add('on');
+  document.getElementById('boundText').textContent = channelName() + '已绑定 · 通知与对话通道已就绪';
+  document.getElementById('sumChannel').textContent = channelName();
+  document.getElementById('sumChannelSt').textContent = '已绑定';
+  var btn = document.getElementById('bindBtn');
+  btn.textContent = '已绑定';
+  btn.disabled = true;
+}
+
+function channelName(){
+  var map = {wechat:'微信', dingtalk:'钉钉', feishu:'飞书'};
+  return map[channel] || '微信';
+}
+
+function selectChannel(c){
+  if(bound){ document.getElementById('boundBox').classList.remove('on'); bound = false; }
+  var btn = document.getElementById('bindBtn');
+  btn.disabled = false;
+  document.getElementById('sumChannel').textContent = {wechat:'微信', dingtalk:'钉钉', feishu:'飞书'}[c];
+  document.getElementById('sumChannelSt').textContent = '待绑定';
+  var maps = {wechat:'模拟扫码绑定', dingtalk:'模拟粘贴绑定', feishu:'模拟粘贴绑定'};
+  btn.textContent = maps[c];
+  channel = c;
+  document.querySelectorAll('.ch-row .ch').forEach(function(x){
+    x.classList.toggle('on', x.getAttribute('data-c') === c);
+  });
+  document.getElementById('panel-wechat').style.display = c === 'wechat' ? 'flex' : 'none';
+  document.getElementById('panel-dingtalk').classList.toggle('on', c === 'dingtalk');
+  document.getElementById('panel-feishu').classList.toggle('on', c === 'feishu');
+}
+
+document.getElementById('chRow').addEventListener('click', function(e){
+  var c = e.target.closest('.ch'); if(!c) return;
+  selectChannel(c.getAttribute('data-c'));
+});
+
+document.getElementById('tierBox').addEventListener('click', function(e){
+  var t = e.target.closest('.tier'); if(!t) return;
+  tier = t.getAttribute('data-t');
+  document.querySelectorAll('.tier').forEach(function(x){ x.classList.toggle('on', x === t); });
+  var map = {quiet:'安静', std:'标准', full:'全量'};
+  document.getElementById('sumTier').textContent = map[tier];
+});
+
+function toggleDnd(){
+  dnd = !dnd;
+  document.getElementById('dndSw').classList.toggle('on', dnd);
+  document.getElementById('sumDnd').textContent = dnd ? '已开启' : '已关闭';
+}
+
+/* 完成步骤的"开始值守" */
+(function(){
+  var nxt = document.getElementById('btnNext');
+  var running = document.getElementById('runningBox');
+  nxt.addEventListener('click', function(){
+    if(curStep === 5){
+      running.classList.add('on');
+      nxt.disabled = true;
+      nxt.textContent = '值守中';
+    }
+  });
+})();
+
+/* ================= Tab 切换 ================= */
+function switchTab(t){
+  document.getElementById('panelA').classList.toggle('on', t === 'A');
+  document.getElementById('panelB').classList.toggle('on', t === 'B');
+  document.getElementById('tabA').classList.toggle('on', t === 'A');
+  document.getElementById('tabB').classList.toggle('on', t === 'B');
+}
+
+/* ================= Part B 微信对话 ================= */
+var WX = {
+  msgs: [],
+  script: [
+    {t:'confirm', tag:'Claude Code · 需要你确认', av:'CC', who:'them',
+      text:'「数据清洗」任务需要访问 /Users/aliciawu/Documents/销售数据.xlsx\n是否允许？',
+      guide:'回复：继续 / 停止 / 状态'},
+    {t:'user', text:'继续'},
+    {t:'info', tag:'Claude Code · 回传', av:'CC', who:'them',
+      text:'收到，继续处理中。已完成 4/10 步，正在读取工作表…'},
+    {t:'user', text:'新任务：整理 5 月销售数据'},
+    {t:'info', tag:'Claude Code · 已接收', av:'CC', who:'them',
+      text:'好的，新任务「整理 5 月销售数据」已开始执行，完成后通知你。'},
+    {t:'user', text:'跑得怎么样了'},
+    {t:'info', tag:'哨兵 · 状态自答', av:'哨', who:'them',
+      text:'Claude Code：2 个任务运行中\n· 数据清洗 4/10（约 12 分钟前开始）\n· 整理 5 月销售数据 刚启动'},
+    {t:'ok', tag:'Claude Code · 任务完成', av:'CC', who:'them',
+      text:'「数据清洗」已完成，耗时 18 分钟。\n结果已保存到 数据清洗结果.xlsx'},
+    {t:'user', text:'停止'},
+    {t:'confirm', tag:'哨兵 · 确认操作', av:'哨', who:'them',
+      text:'要停止 Claude Code 的任务「整理 5 月销售数据」吗？\n回复「确认」执行，回复「取消」放弃。',
+      guide:'注意：停止后任务无法恢复'}
+  ],
+  step: 0,
+  playing: false
+};
+
+var WX_AV = {
+  CC: {bg:'#185FA5'},
+  '哨': {bg:'#0F6E56'}
+};
+
+function pushMsg(m){
+  var box = document.getElementById('wxMsgs');
+  var el = document.createElement('div');
+  el.className = 'msg' + (m.who === 'user' ? ' right' : '');
+  if(m.t) el.setAttribute('data-t', m.t);
+  var avBg = m.who === 'user' ? '#07C160' : (WX_AV[m.av] ? WX_AV[m.av].bg : '#888780');
+  var inner = '';
+  if(m.tag) inner += '<span class="tag">' + m.tag + '</span><br>';
+  inner += m.text;
+  if(m.guide) inner += '<div class="guide">' + m.guide + '</div>';
+  el.innerHTML = '<span class="av" style="background:' + avBg + '">' + (m.who === 'user' ? '我' : m.av) + '</span>' +
+    '<div class="bubble"><div class="inner">' + inner + '</div><div class="meta">' + timeNow() + (m.who === 'user' ? ' · 已发送' : '') + '</div></div>';
+  box.appendChild(el);
+  var c = document.getElementById('wxContent');
+  c.scrollTop = c.scrollHeight;
+}
+
+function timeNow(){
+  var d = new Date();
+  var h = d.getHours(), m = d.getMinutes();
+  return (h<10?'0':'') + h + ':' + (m<10?'0':'') + m;
+}
+
+function playScript(){
+  if(WX.playing) return;
+  WX.playing = true;
+  if(WX.step === 0) document.getElementById('wxMsgs').innerHTML = '';
+  var timer = setInterval(function(){
+    if(WX.step >= WX.script.length){
+      clearInterval(timer); WX.playing = false; return;
+    }
+    pushMsg(WX.script[WX.step]);
+    WX.step++;
+  }, 900);
+}
+
+var quickReplies = {
+  '继续': {t:'info', tag:'Claude Code · 回传', av:'CC', who:'them', text:'收到，继续处理中。已完成 5/10 步…'},
+  '停止': {t:'confirm', tag:'哨兵 · 确认操作', av:'哨', who:'them', text:'要停止最近的任务吗？回复「确认」执行，回复「取消」放弃。', guide:'注意：停止后任务无法恢复'},
+  '状态': {t:'info', tag:'哨兵 · 状态自答', av:'哨', who:'them', text:'Claude Code：1 个任务运行中\n· 数据清洗 5/10（进行中）'},
+  '新任务': {t:'info', tag:'Claude Code · 已接收', av:'CC', who:'them', text:'好的，新任务已开始执行，完成后通知你。'}
+};
+
+function quickMsg(k){
+  pushMsg({t:'user', text:k});
+  var rep = quickReplies[k];
+  if(rep) setTimeout(function(){ pushMsg(rep); }, 700);
+}
+
+function sendMsg(){
+  var inp = document.getElementById('wxInput');
+  var v = inp.value.trim();
+  if(!v) return;
+  pushMsg({t:'user', text:v});
+  inp.value = '';
+  setTimeout(function(){
+    pushMsg({t:'info', tag:'哨兵 · 透传回执', av:'哨', who:'them',
+      text:'已透传给最近活跃的 Agent（Claude Code），等待回复…', guide:'指定目标：交给 Claude Code：xxx'});
+  }, 600);
+}
+
+/* 初始化 */
+renderAgents();
+renderStep();
+pushMsg({t:'info', tag:'哨兵 · 欢迎', av:'哨', who:'them',
+  text:'你好，我是哨兵。你电脑上的 AI 任务由我盯着。\n回复「帮助」查看能做什么。'});
+</script>
+</body>
+</html>

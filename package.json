@@ -1,0 +1,26 @@
+{
+  "name": "youyi",
+  "version": "0.1.0",
+  "private": true,
+  "description": "游奕/哨兵 — 常驻个人电脑的多 Agent 值守中控",
+  "engines": {
+    "node": ">=22"
+  },
+  "workspaces": [
+    "packages/shared",
+    "packages/hook-bridge",
+    "packages/cli",
+    "packages/app"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w @youyi/app",
+    "build": "npm run build -w @youyi/shared && npm run build -w @youyi/hook-bridge && npm run build -w @youyi/cli && npm run build -w @youyi/app",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm run test -w @youyi/app",
+    "pack:mac": "npm run pack:mac -w @youyi/app",
+    "pack:win": "npm run pack:win -w @youyi/app"
+  },
+  "devDependencies": {
+    "typescript": "5.9.3"
+  }
+}

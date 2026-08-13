@@ -148,11 +148,17 @@ export function registerIpc(sentinel: Sentinel, windows: WindowManager): void {
   sentinel.channels.on('wechat-status', (status) => {
     // session-expired 单独给一条更明确的提示：渠道内部已经在自愈了，
     // 用户只需要等新二维码推过来重新扫码，不用自己再点一次「重新绑定」
-    const message =
-      status === 'session-expired'
-        ? '微信登录已过期，正在自动重新拉取二维码，请稍候重新扫码'
-        : `微信状态：${status}`
-    windows.send(IPC.pushToast, { kind: status === 'session-expired' ? 'error' : 'info', message })
+    const STATUS_TOAST: Record<string, { kind: 'info' | 'success' | 'error'; message: string }> = {
+      scanned: { kind: 'info', message: '扫码成功，正在登录微信…' },
+      ready: { kind: 'success', message: '微信连接成功' },
+      expired: { kind: 'error', message: '二维码已过期，请重新生成' },
+      'session-expired': {
+        kind: 'error',
+        message: '微信登录已过期，正在自动重新拉取二维码，请稍候重新扫码'
+      }
+    }
+    const toast = STATUS_TOAST[status] ?? { kind: 'info' as const, message: `微信状态：${status}` }
+    windows.send(IPC.pushToast, toast)
   })
 }
 

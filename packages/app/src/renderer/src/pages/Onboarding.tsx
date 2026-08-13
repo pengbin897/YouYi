@@ -40,18 +40,27 @@ export function Onboarding({
       setSelected(settings.enabledAgents)
       if (settings.channels.wechat.boundUserId) setWechatReady(true)
     })
+    // 兜底：如果扫码成功的推送发生在本组件挂载之前（比如用户在别的步骤停留时扫的码），
+    // 挂载时主动查一次当前渠道状态，避免漏掉「已登录」这个事实
+    void window.youyi.getChannelStates().then((states) => {
+      if (states.find((s) => s.id === 'wechat')?.loggedIn) setWechatReady(true)
+    })
 
     const offQr = window.youyi.on<string>(IPC.pushWechatQr, setQr)
     const offCode = window.youyi.on<boolean>(IPC.pushVerifyCodeRequired, () =>
       setNeedVerifyCode(true)
     )
-    const offChannels = window.youyi.on<{ id: string; bound: boolean }[]>(
+    const offChannels = window.youyi.on<{ id: string; loggedIn: boolean; bound: boolean }[]>(
       IPC.pushChannelStates,
       (states) => {
         const wechat = states.find((s) => s.id === 'wechat')
-        if (wechat?.bound) {
+        // 扫码登录成功（loggedIn）就算连接成功，不能等 bound——
+        // bound 要求用户先给机器人发一条消息，而界面上"先发一句话"的提示
+        // 恰恰要在连接成功之后才会出现，等 bound 会互相死等
+        if (wechat?.loggedIn || wechat?.bound) {
           setWechatReady(true)
           setQr(null)
+          setNeedVerifyCode(false)
         }
       }
     )

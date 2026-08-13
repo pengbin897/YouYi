@@ -244,6 +244,11 @@ export class ChannelManager extends EventEmitter {
         id,
         label: CHANNEL_LABEL[id],
         enabled: Boolean(channel),
+        // 微信的「登录成功」和「可主动发消息」是两回事：扫码完成即 loggedIn，
+        // 但 isReady() 还要求用户先发过一条消息（拿到会话上下文）。
+        // 如果只暴露 isReady()，引导页会陷入死锁——界面等 bound 才提示"先发一句话"，
+        // 而 bound 又要等用户发了那句话才为 true。其余渠道两者语义相同。
+        loggedIn: channel instanceof WechatChannel ? channel.isRunning : (channel?.isReady() ?? false),
         bound: channel?.isReady() ?? false,
         isPrimary: settings.primaryChannel === id,
         consecutiveFailures: this.failures.get(id) ?? 0,

@@ -55,12 +55,23 @@ export function App(): ReactElement {
             {running > 0 ? `${running} 个任务进行中` : '值守中'}
           </div>
           <div style={{ marginTop: 6 }}>
-            <span
-              className={`status-dot ${
-                state.channels.find((c) => c.isPrimary)?.bound ? 'status-dot--on' : 'status-dot--warn'
-              }`}
-            />
-            {state.channels.find((c) => c.isPrimary)?.bound ? '微信已连接' : '微信未连接'}
+            {/* bound（绿）=可主动发通知；loggedIn（黄）=登录成功但还没收到用户首条消息 */}
+            {(() => {
+              const primary = state.channels.find((c) => c.isPrimary)
+              const label = primary?.bound
+                ? '微信已连接'
+                : primary?.loggedIn
+                  ? '微信已登录，等你发第一句话'
+                  : '微信未连接'
+              return (
+                <>
+                  <span
+                    className={`status-dot ${primary?.bound ? 'status-dot--on' : 'status-dot--warn'}`}
+                  />
+                  {label}
+                </>
+              )
+            })()}
           </div>
         </div>
       </aside>

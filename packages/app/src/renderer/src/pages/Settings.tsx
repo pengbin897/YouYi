@@ -33,7 +33,11 @@ export function Settings({ state }: { state: State }): ReactElement {
   const [wechatQr, setWechatQr] = useState<string | null>(null)
   const [needVerifyCode, setNeedVerifyCode] = useState(false)
   const [verifyCode, setVerifyCode] = useState('')
-  const wechatBound = state.channels.find((c) => c.id === 'wechat')?.bound ?? false
+  const wechatState = state.channels.find((c) => c.id === 'wechat')
+  // loggedIn=扫码登录成功；bound=用户已发过首条消息、可以主动推通知。
+  // 二维码清理和「已连接」判定都要看 loggedIn，等 bound 会让用户扫完码后界面毫无反应
+  const wechatLoggedIn = wechatState?.loggedIn ?? false
+  const wechatBound = wechatState?.bound ?? false
 
   useEffect(() => {
     void window.youyi.getDiscovery().then(setDiscovery)
@@ -50,13 +54,13 @@ export function Settings({ state }: { state: State }): ReactElement {
     }
   }, [])
 
-  // 重新连上之后二维码就没用了，及时清掉避免残留在页面上
+  // 重新连上（扫码登录成功）之后二维码就没用了，及时清掉避免残留在页面上
   useEffect(() => {
-    if (wechatBound) {
+    if (wechatLoggedIn) {
       setWechatQr(null)
       setNeedVerifyCode(false)
     }
-  }, [wechatBound])
+  }, [wechatLoggedIn])
 
   const toggleAgent = async (id: AgentId): Promise<void> => {
     const enabled = settings.enabledAgents.includes(id)
@@ -226,15 +230,14 @@ export function Settings({ state }: { state: State }): ReactElement {
             <div>
               <div className="field__label">
                 微信
+                {/* 三种状态：已连接（可主动发通知）/ 已登录但还没收到用户首条消息 / 未连接 */}
                 <span
                   className={`badge ${
-                    state.channels.find((c) => c.id === 'wechat')?.bound
-                      ? 'badge--green'
-                      : 'badge--gray'
+                    wechatBound ? 'badge--green' : wechatLoggedIn ? 'badge--orange' : 'badge--gray'
                   }`}
                   style={{ marginLeft: 8 }}
                 >
-                  {state.channels.find((c) => c.id === 'wechat')?.bound ? '已连接' : '未连接'}
+                  {wechatBound ? '已连接' : wechatLoggedIn ? '已登录，等你发第一句话' : '未连接'}
                 </span>
               </div>
               <div className="field__hint">
@@ -266,7 +269,7 @@ export function Settings({ state }: { state: State }): ReactElement {
             </div>
           </div>
 
-          {!wechatBound && wechatQr && (
+          {!wechatLoggedIn && wechatQr && (
             <div className="qr-box" style={{ margin: '4px 0 16px' }}>
               <img className="qr-box__img" src={wechatQr} alt="微信登录二维码" />
               <div className="qr-box__hint">用微信扫描这个二维码重新登录</div>

@@ -76,6 +76,13 @@ export interface ChannelState {
   id: string
   label: string
   enabled: boolean
+  /**
+   * 已完成登录/接入（微信=扫码登录成功）。
+   * 注意与 bound 的区别：微信扫码成功后 loggedIn 即为 true，
+   * 但要等用户先发来第一条消息拿到会话上下文后 bound 才为 true。
+   * 引导页「连接成功」看 loggedIn，能否主动发通知看 bound。
+   */
+  loggedIn: boolean
   bound: boolean
   isPrimary: boolean
   /** 连续失败次数，达到 2 次触发降级（PRD E5） */

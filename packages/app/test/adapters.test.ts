@@ -189,7 +189,7 @@ describe('Codex（~/.codex/hooks.json）', () => {
   })
 })
 
-describe('Workbuddy（~/.codebuddy/settings.json）', () => {
+describe('Workbuddy（~/.workbuddy/settings.json）', () => {
   const SESSION = 'wb-sess-1'
   const base = { session_id: SESSION, cwd: '/Users/demo/app', permission_mode: 'default' }
 

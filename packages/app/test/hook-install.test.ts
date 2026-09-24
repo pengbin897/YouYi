@@ -140,6 +140,11 @@ describe('Codex / Workbuddy / Qoder：桥接命令条目', () => {
 
   it('Workbuddy 开了工具级闸门后，PreToolUse 超时随之放宽', async () => {
     await new JsonHooksAdapter(dialects.WORKBUDDY_DIALECT).install(ctx)
+    // 钩子必须写进 ~/.workbuddy，不能误装到 CodeBuddy 的 ~/.codebuddy
+    expect(dialects.WORKBUDDY_DIALECT.configFile).toBe(
+      join(FAKE_HOME, '.workbuddy', 'settings.json')
+    )
+    expect(dialects.WORKBUDDY_DIALECT.detect.dirs).toEqual([join(FAKE_HOME, '.workbuddy')])
     const hooks = readJson(dialects.WORKBUDDY_DIALECT.configFile).hooks
     expect(hooks.PreToolUse[0].hooks[0].timeout).toBeGreaterThanOrEqual(600)
   })

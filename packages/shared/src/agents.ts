@@ -102,7 +102,8 @@ export const AGENT_REGISTRY: Record<AgentId, AgentDescriptor> = {
     // 不代表 Workbuddy 不能无头续跑——前端会话续聊走适配器的 resumeSession
     // （CodeBuddy Agent SDK 的 query + resume），不受此开关控制
     canHeadless: false,
-    configPath: '~/.codebuddy/settings.json',
+    // WorkBuddy 与 CodeBuddy 共用钩子协议，用户配置目录独立，避免两套产品抢 ~/.codebuddy
+    configPath: '~/.workbuddy/settings.json',
     stallTimeoutMs: THIRTY_MIN
   },
   'qoder-work': {

@@ -137,13 +137,13 @@ TaskDetail 抽屉
       resume: task.session_id,     // 恢复指定会话（SDK Options.resume，官方文档明确支持）
       cwd: task.cwd,               // 在原工作目录续跑（字段存在性见 §8 V1 验证）
       settingSources: ['user']     // 关键：SDK 默认不加载任何文件系统配置，必须显式加载
-    }                              // 用户级 ~/.codebuddy/settings.json，否则哨兵钩子不会触发
+    }                              // 用户级 ~/.workbuddy/settings.json，否则哨兵钩子不会触发
   })
   for await (const message of q) { /* 收集 AssistantMessage 文本 */ }
   ```
   超时 10 分钟（与现有 `sendHeadless` 一致）：到点调用 `q.interrupt()` 中断并上报失败。
   不使用 `unstable_v2_resumeSession`——V2 处于实验阶段（API 可能变化），单轮续跑用 V1 `query()` 已足够。
-- 任务追踪：SDK 默认**不加载任何文件系统配置**（官方文档明确），必须显式 `settingSources: ['user']` 加载 `~/.codebuddy/settings.json`，哨兵装的钩子才会照常触发——`UserPromptSubmit` → `startTurn` 开新一轮任务，`Stop` 收尾。即任务生命周期完全复用现有 Hook 管线，`SessionChat` 不需要自己造任务。
+- 任务追踪：SDK 默认**不加载任何文件系统配置**（官方文档明确），必须显式 `settingSources: ['user']` 加载 `~/.workbuddy/settings.json`，哨兵装的钩子才会照常触发——`UserPromptSubmit` → `startTurn` 开新一轮任务，`Stop` 收尾。即任务生命周期完全复用现有 Hook 管线，`SessionChat` 不需要自己造任务。
 - 回复获取：消费 `query()` 的消息流，收集 `AssistantMessage` 的文本块（或末条 `ResultMessage.result`）作为本轮回复——结构化取值，不依赖 stdout 文本解析。拿到后以**内部事件**（`transport: 'internal'`）经 `engine.ingest` 写入当前轮任务的 `task_meta.last_assistant_message` → `applyEvent` 更新 `task.summary`（现有逻辑，500 字截断）。同状态迁移（`COMPLETED → COMPLETED`，`from === to`）被状态机允许，只补 summary 不改状态。
 - 若钩子在 SDK 续跑中不触发（风险 V2，见 §8）：兜底方案为 `SessionChat` 自行上报——调用 SDK 前后自行调用 `sessions.startTurn()` + `engine.ingest`（internal 的 task_started / task_completed with 回复）。**先做验证实验再决定是否需要**，避免双上报。
 

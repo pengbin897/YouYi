@@ -188,7 +188,9 @@ export const CODEX_DIALECT: HookDialect = {
 export const WORKBUDDY_DIALECT: HookDialect = {
   agentId: 'workbuddy',
   label: 'Workbuddy',
-  configFile: join(home, '.codebuddy', 'settings.json'),
+  // WorkBuddy 桌面应用把配置目录放在 ~/.workbuddy，和 CodeBuddy 的 ~/.codebuddy 分开。
+  // 钩子写进后者时 WorkBuddy 读不到。
+  configFile: join(home, '.workbuddy', 'settings.json'),
   entry: 'command',
   events: [
     { name: 'SessionStart', role: 'session-start', timeoutSec: 10 },
@@ -212,10 +214,11 @@ export const WORKBUDDY_DIALECT: HookDialect = {
     inject: (text) => ({ json: { continue: false, reason: text } })
   },
   detect: {
+    // CLI 仍叫 codebuddy，由 WorkBuddy.app 内置；配置目录和桌面应用名已经独立
     bins: ['codebuddy'],
-    dirs: [join(home, '.codebuddy')],
-    apps: ['CodeBuddy'],
-    processes: ['codebuddy']
+    dirs: [join(home, '.workbuddy')],
+    apps: ['WorkBuddy'],
+    processes: ['codebuddy', 'WorkBuddy']
   }
 }
 

@@ -8,6 +8,8 @@
  * 关键约定：
  * - settingSources 必须显式加载 user 级配置。SDK 默认不加载任何文件系统配置，
  *   漏了这一项哨兵装的钩子就不会触发，任务面板将看不到这一轮的生命周期。
+ *   用户级配置在 ~/.workbuddy/settings.json（见 WORKBUDDY_DIALECT.configFile），
+ *   不是 CodeBuddy 的 ~/.codebuddy。
  * - 只用 V1 稳定 API（query），不碰 unstable_v2_*（实验期，接口可能变化）。
  */
 

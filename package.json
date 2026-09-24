@@ -13,17 +13,15 @@
     "packages/app"
   ],
   "scripts": {
-    "dev": "npm run dev -w @youyi/app",
-    "build": "npm run build -w @youyi/shared && npm run build -w @youyi/hook-bridge && npm run build -w @youyi/cli && npm run build -w @youyi/app",
+    "preinstall": "node scripts/ensure-electron.mjs",
+    "dev": "npm run preinstall && npm run dev -w @youyi/app",
+    "build": "npm run preinstall && npm run build -w @youyi/shared && npm run build -w @youyi/hook-bridge && npm run build -w @youyi/cli && npm run build -w @youyi/app",
     "typecheck": "npm run typecheck --workspaces --if-present",
-    "test": "npm run test -w @youyi/app",
-    "pack:mac": "npm run pack:mac -w @youyi/app",
-    "pack:win": "npm run pack:win -w @youyi/app"
+    "test": "npm run preinstall && npm run test -w @youyi/app",
+    "pack:mac": "npm run preinstall && npm run pack:mac -w @youyi/app",
+    "pack:win": "npm run preinstall && npm run pack:win -w @youyi/app"
   },
   "devDependencies": {
     "typescript": "5.9.3"
-  },
-  "allowScripts": {
-    "electron@43.3.0": true
   }
 }

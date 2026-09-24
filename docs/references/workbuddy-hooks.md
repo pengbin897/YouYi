@@ -3,7 +3,7 @@ title: Workbuddy (CodeBuddy) Hooks 接入说明
 agent: Workbuddy
 source: https://www.workbuddy.ai/docs/cli/hooks
 fetched_at: 2026-08-12
-notes: Workbuddy 文档站即 CodeBuddy Hooks Reference。2026-08-13 补充插件参考中的完整事件表（见文末「补充：完整事件表」），确认 PermissionRequest 为专用授权事件。
+notes: Workbuddy 文档站即 CodeBuddy Hooks Reference。2026-08-13 补充插件参考中的完整事件表（见文末「补充：完整事件表」），确认 PermissionRequest 为专用授权事件。2026-09-24 更正：WorkBuddy 用户配置目录为 ~/.workbuddy（与 CodeBuddy 的 ~/.codebuddy 独立），游奕安装和发现都跟踪 ~/.workbuddy/settings.json。正文里其余 ~/.codebuddy 是上游文档原文，接入时不要照抄。
 ---
 
 Hooks Reference | Tencent Cloud Code Assistant CodeBuddy – AI Code Editor
@@ -30,13 +30,13 @@ Hooks let you inject custom scripts or commands into every stage of a CodeBuddy 
 
 ## Configuration ​
 
-CodeBuddy Code stores hook configuration inside your settings files:
+WorkBuddy stores hook configuration inside your settings files（与 CodeBuddy 引擎协议相同，目录独立）：
 
 | Scope | Path | Notes |
 | --- | --- | --- |
-| User | `~/.codebuddy/settings.json` | Applies to every project |
-| Project | ` /.codebuddy/settings.json` | Shared with the whole repo |
-| Project local | ` /.codebuddy/settings.local.json` | Local-only overrides (not committed) |
+| User | `~/.workbuddy/settings.json` | Applies to every project |
+| Project | `.workbuddy/settings.json` | Shared with the whole repo |
+| Project local | `.workbuddy/settings.local.json` | Local-only overrides (not committed) |
 | Enterprise policy | Distributed policy bundle | Managed centrally by your org |
 
 Merge behavior: Hooks from different scopes are merged, not overwritten. All matching hooks for the same event run in parallel.
@@ -1031,7 +1031,7 @@ With this guide you should have a complete understanding of how hooks work insid
 ## 补充：完整事件表（摘自插件参考，2026-08-13）
 
 主文档正文只详细记载了 9 个事件，完整事件家族在插件参考（Plugins Reference › Hooks 一节）中给出。
-关键结论：**插件钩子响应与用户定义钩子相同的生命周期事件**——即 `~/.codebuddy/settings.json`
+关键结论：**插件钩子响应与用户定义钩子相同的生命周期事件**——即 `~/.workbuddy/settings.json`
 中的用户级 hooks 同样可以订阅下表的全部事件，其中就包括专用授权事件 `PermissionRequest`。
 
 | 事件 | 触发时机 |

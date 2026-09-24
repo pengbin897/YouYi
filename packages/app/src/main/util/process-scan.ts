@@ -112,7 +112,7 @@ export function anyPathExists(paths: string[]): string | null {
 /**
  * 图形界面应用的常规安装位置。
  *
- * Qoder / Trae / CodeBuddy / ChatGPT 这几家是桌面应用而不是命令行工具，
+ * Qoder / Trae / WorkBuddy / ChatGPT 这几家是桌面应用而不是命令行工具，
  * PATH 里查不到，只能按各平台的安装惯例找应用本体。
  */
 export function appInstallPaths(name: string): string[] {

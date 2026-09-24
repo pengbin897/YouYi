@@ -1,0 +1,80 @@
+/* 设计 token 沿用交互原型（docs/哨兵-交互原型.html），保证实现与设计稿一致 */
+
+:root {
+  --blue: #185fa5;
+  --blue-800: #0c447c;
+  --blue-50: #e6f1fb;
+  --blue-100: #b5d4f4;
+
+  --ink: #2c2c2a;
+  --ink2: #5f5e5a;
+  --ink3: #888780;
+
+  --bg: #f5f6f8;
+  --card: #ffffff;
+  --border: #e3e5e8;
+  --border2: #d3d1c7;
+
+  --orange: #854f0b;
+  --orange-bg: #faeeda;
+  --orange-400: #ef9f27;
+
+  --red: #a32d2d;
+  --red-bg: #fcebeb;
+
+  --green: #3b6d11;
+  --green-bg: #eaf3de;
+
+  --wx: #07c160;
+  --wx-bg: #ededed;
+
+  --radius: 10px;
+  --font: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, monospace;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+  /* 值守类应用大量使用拖拽区域，禁掉整页选中避免误操作 */
+  user-select: none;
+}
+
+button {
+  font-family: var(--font);
+  font-size: 14px;
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: inherit;
+}
+
+input,
+select,
+textarea {
+  font-family: var(--font);
+  font-size: 13px;
+  color: var(--ink);
+}
+
+a {
+  color: var(--blue);
+}
